@@ -3,190 +3,89 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Capacitive Variable Distance Explorer</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 
 <style>
 :root {
-  --bg: #09111f;
-  --panel: #111e31;
-  --border: #263a53;
-  --text: #eef5ff;
-  --muted: #9aacc4;
-  --cyan: #55e5f2;
-  --orange: #ffb66d;
+  --bg:#09111f;
+  --panel:#111e31;
+  --border:#263a53;
+  --text:#eef5ff;
+  --muted:#9aacc4;
+  --cyan:#55e5f2;
+  --orange:#ffb66d;
 }
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Arial,sans-serif
 }
+header{padding:25px 5%;background:#0c1728;border-bottom:1px solid var(--border)}
+.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:2px;font-weight:bold}
+h1{font-size:clamp(25px,4vw,39px);margin:10px 0}
+p{line-height:1.6}
+header p,.note{color:var(--muted)}
+header p{max-width:720px}
+main{max-width:1250px;margin:auto;padding:24px 4%}
+.layout,.lower{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:18px}
+.lower{grid-template-columns:1fr 1fr;margin-top:18px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;min-width:0}
+h2{font-size:18px;margin-top:0}
+#scene{height:340px;background:radial-gradient(ellipse,#203753,#0b1526 75%);border-radius:12px;overflow:hidden}
+#scene canvas{display:block;width:100%;height:100%}
+.scene-label,.note{font-size:12px;color:var(--muted)}
+.scene-label{margin:12px 0}
+.controls{margin-top:22px}
+.control-heading{display:flex;justify-content:space-between;gap:10px;align-items:center}
+output{color:var(--cyan);font-weight:bold}
+input[type=range]{width:100%;accent-color:var(--cyan);margin:18px 0;cursor:pointer}
+.buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+button{background:#1b2d44;border:1px solid #3b5571;color:var(--text);padding:11px 13px;border-radius:9px;cursor:pointer;font-weight:bold}
+button:hover,button.active{border-color:var(--cyan);color:var(--cyan)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.stat{padding:16px;background:#0b1728;border:1px solid var(--border);border-radius:12px}
+.stat small{color:var(--muted);display:block;margin-bottom:9px}
+.stat strong{font-size:22px;color:var(--cyan)}
+.status{padding:13px;background:#0b1728;border-radius:10px;border-left:3px solid var(--cyan);line-height:1.6;font-size:14px}
+.formula{text-align:center;padding:18px;background:#0b1728;border-radius:10px;color:var(--cyan);font-size:21px}
+#graph{width:100%;height:230px;display:block}
+.legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.steps{padding-left:20px;line-height:1.9}
+footer{text-align:center;color:var(--muted);padding:30px 12px}
 
-header {
-  padding: 24px 5%;
-  border-bottom: 1px solid var(--border);
-  background: #0c1728;
+/* AR/model viewer dialog */
+#arModal{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(3,8,18,.94);padding:16px;
+  align-items:center;justify-content:center
 }
-
-.eyebrow {
-  color: var(--cyan);
-  font-size: 12px;
-  letter-spacing: 2px;
-  font-weight: bold;
+#arModal.open{display:flex}
+.ar-window{
+  width:min(900px,100%);height:min(760px,94vh);
+  background:#fff;color:#152033;border-radius:16px;
+  overflow:hidden;display:flex;flex-direction:column
 }
-
-h1 { margin: 10px 0; font-size: clamp(25px, 4vw, 39px); }
-p { line-height: 1.65; }
-header p { max-width: 700px; color: var(--muted); }
-
-main {
-  max-width: 1250px;
-  margin: auto;
-  padding: 24px 4%;
+.ar-top{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:12px 16px;background:#101d30;color:white
 }
-
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
-  gap: 18px;
+.ar-top h2{margin:0;font-size:16px}
+#closeAR{background:#253850;color:white}
+model-viewer{
+  width:100%;height:100%;min-height:300px;background:#edf3f8;
+  --poster-color:#edf3f8
 }
-
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  min-width: 0;
-}
-
-.panel h2 { margin-top: 0; font-size: 18px; }
-
-#scene {
-  height: 340px;
-  background: radial-gradient(ellipse, #203753, #0b1526 75%);
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-}
-
-#scene canvas { display: block; width: 100%; height: 100%; }
-
-.scene-label {
-  color: var(--muted);
-  font-size: 12px;
-  margin: 12px 0;
-}
-
-.controls { margin-top: 22px; }
-.control-heading {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-}
-
-output { color: var(--cyan); font-weight: bold; }
-input[type="range"] {
-  width: 100%;
-  accent-color: var(--cyan);
-  margin: 18px 0;
-  cursor: pointer;
-}
-
-button {
-  background: #1b2d44;
-  border: 1px solid #3b5571;
-  color: var(--text);
-  padding: 11px 13px;
-  border-radius: 9px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-button:hover, button.active {
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
-
-.buttons { display: flex; flex-wrap: wrap; gap: 9px; }
-
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 20px 0;
-}
-
-.stat {
-  padding: 16px;
-  background: #0b1728;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.stat small { color: var(--muted); display: block; margin-bottom: 9px; }
-.stat strong { font-size: 22px; color: var(--cyan); }
-
-.status {
-  padding: 13px;
-  background: #0b1728;
-  border-radius: 10px;
-  border-left: 3px solid var(--cyan);
-  line-height: 1.6;
-  font-size: 14px;
-}
-
-.formula {
-  font-size: 21px;
-  text-align: center;
-  padding: 18px;
-  border-radius: 10px;
-  background: #0b1728;
-  color: var(--cyan);
-}
-
-.lower {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-top: 18px;
-}
-
-#graph {
-  width: 100%;
-  height: 230px;
-  display: block;
-}
-
-.legend {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  margin-right: 5px;
-}
-
-.steps { padding-left: 20px; line-height: 1.9; }
-.note { color: var(--muted); font-size: 13px; }
-footer { text-align: center; color: var(--muted); padding: 30px 12px; }
-
-@media(max-width: 760px) {
-  .layout, .lower { grid-template-columns: 1fr; }
-  #scene { height: 300px; }
+.ar-help{margin:0;padding:12px 16px;background:#101d30;color:#dce8f8;font-size:13px}
+#arError{display:none;color:#9c2b20;background:#fff0ed;padding:12px;font-size:13px}
+@media(max-width:760px){
+  .layout,.lower{grid-template-columns:1fr}
+  #scene{height:300px}
+  .ar-window{height:90vh}
 }
 </style>
 </head>
@@ -195,418 +94,380 @@ footer { text-align: center; color: var(--muted); padding: 30px 12px; }
 <header>
   <div class="eyebrow">SENSORS & INSTRUMENTATION LAB</div>
   <h1>Capacitive Variable-Distance Explorer</h1>
-  <p>Explore how changing the separation between two capacitor plates changes capacitance. Move the plate, observe the electric field, and study the live readings.</p>
+  <p>Explore how changing the separation between two capacitor plates changes capacitance. Move the plate, observe the electric field and study the live readings.</p>
 </header>
 
 <main>
-  <div class="layout">
-    <section class="panel">
-      <h2>01 / Interactive 3D capacitor</h2>
-      <div id="scene"></div>
-      <div class="scene-label">
-        BLUE = FIXED PLATE &nbsp; | &nbsp; ORANGE = MOVABLE PLATE
+<div class="layout">
+  <section class="panel">
+    <h2>01 / Interactive 3D capacitor</h2>
+    <div id="scene"></div>
+    <div class="scene-label">BLUE = FIXED PLATE | ORANGE = MOVABLE PLATE</div>
+
+    <div class="controls">
+      <div class="control-heading">
+        <label for="distance">Plate separation</label>
+        <output id="distanceValue">5.0 mm</output>
       </div>
-
-      <div class="controls">
-        <div class="control-heading">
-          <label for="distance">Plate separation</label>
-          <output id="distanceValue">5.0 mm</output>
-        </div>
-        <input id="distance" type="range" min="1" max="10"
-               step="0.1" value="5">
-        <div class="control-heading note">
-          <span>1 mm · Closer</span>
-          <span>Farther · 10 mm</span>
-        </div>
+      <input id="distance" type="range" min="1" max="10" step="0.1" value="5">
+      <div class="control-heading note">
+        <span>1 mm · Closer</span><span>Farther · 10 mm</span>
       </div>
+    </div>
 
-      <div class="buttons" style="margin-top:18px">
-        <button id="animateBtn">▶ Animate movement</button>
-        <button id="crossBtn">Show cross-section</button>
-        <button id="resetBtn">↺ Reset</button>
-        <button id="arBtn">View in AR</button>
-      </div>
-      <p class="note">Drag the 3D view to rotate it. Scroll to zoom. AR requires a compatible device and browser.</p>
-    </section>
+    <div class="buttons">
+      <button id="animateBtn">▶ Animate movement</button>
+      <button id="crossBtn">Show cross-section</button>
+      <button id="resetBtn">↺ Reset</button>
+      <button id="arBtn">View capacitor in AR</button>
+    </div>
+    <p class="note">Drag to rotate the simulation. Scroll to zoom. Use a compatible phone for AR placement.</p>
+  </section>
 
-    <section class="panel">
-      <h2>02 / Live measurements</h2>
+  <section class="panel">
+    <h2>02 / Live measurements</h2>
+    <div class="stats">
+      <div class="stat"><small>PLATE DISTANCE</small><strong id="gapStat">5.0 mm</strong></div>
+      <div class="stat"><small>CAPACITANCE</small><strong id="capStat">17.71 pF</strong></div>
+      <div class="stat"><small>RELATIVE TO 5 mm</small><strong id="changeStat">100%</strong></div>
+      <div class="stat"><small>ELECTRIC FIELD*</small><strong id="fieldStat">200 V/m</strong></div>
+    </div>
+    <div class="status" id="explanation">At 5 mm separation, capacitance is approximately 17.7 pF.</div>
+    <h2 style="margin-top:26px">Capacitance formula</h2>
+    <div class="formula">C = ε₀ εᵣ A / d</div>
+    <p class="note">C = capacitance; A = overlapping plate area; d = separation; ε₀ = permittivity of free space; εᵣ = relative permittivity.</p>
+    <p class="note">*Electric field assumes a constant 1 V across the gap. Fringing effects are neglected.</p>
+  </section>
+</div>
 
-      <div class="stats">
-        <div class="stat">
-          <small>PLATE DISTANCE</small>
-          <strong id="gapStat">5.0 mm</strong>
-        </div>
-        <div class="stat">
-          <small>CAPACITANCE</small>
-          <strong id="capStat">17.7 pF</strong>
-        </div>
-        <div class="stat">
-          <small>RELATIVE CHANGE</small>
-          <strong id="changeStat">100%</strong>
-        </div>
-        <div class="stat">
-          <small>ELECTRIC FIELD*</small>
-          <strong id="fieldStat">200 V/m</strong>
-        </div>
-      </div>
-
-      <div class="status" id="explanation" aria-live="polite">
-        At 5 mm separation, the plates have a capacitance of approximately 17.7 pF.
-      </div>
-
-      <h2 style="margin-top:26px">Capacitance formula</h2>
-      <div class="formula">C = ε₀ εᵣ A / d</div>
-      <p class="note">
-        C = capacitance · A = overlapping plate area · d = separation ·
-        ε₀ = permittivity of free space · εᵣ = relative permittivity.
-      </p>
-      <p class="note">*The electric field estimate assumes a constant 1 V across the gap. Fringing effects are neglected in the capacitance calculation.</p>
-    </section>
-  </div>
-
-  <div class="lower">
-    <section class="panel">
-      <h2>03 / Distance vs capacitance</h2>
-      <canvas id="graph" aria-label="Graph of capacitance against distance"></canvas>
-      <div class="legend">
-        <span><i class="dot" style="background:#55e5f2"></i>Theoretical curve</span>
-        <span><i class="dot" style="background:#ffb66d"></i>Current operating point</span>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>04 / Understand the working</h2>
-      <ol class="steps">
-        <li>Two conductive plates form a capacitor.</li>
-        <li>One plate remains fixed while the other moves.</li>
-        <li>The movement changes the separation, d.</li>
-        <li>Smaller separation produces greater capacitance.</li>
-        <li>A measuring circuit can convert this change into an electrical output representing displacement.</li>
-      </ol>
-      <div class="status" id="principle">
-        Decrease the gap to see capacitance increase.
-      </div>
-    </section>
-  </div>
+<div class="lower">
+  <section class="panel">
+    <h2>03 / Distance vs capacitance</h2>
+    <canvas id="graph" aria-label="Capacitance versus distance graph"></canvas>
+    <div class="legend">
+      <span><i class="dot" style="background:#55e5f2"></i>Theoretical curve</span>
+      <span><i class="dot" style="background:#ffb66d"></i>Current point</span>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>04 / Understand the working</h2>
+    <ol class="steps">
+      <li>Two conductive plates form a capacitor.</li>
+      <li>One plate remains fixed while the other moves.</li>
+      <li>The movement changes the separation d.</li>
+      <li>Smaller separation produces greater capacitance.</li>
+      <li>A measuring circuit converts the capacitance change into an electrical output representing displacement.</li>
+    </ol>
+    <div class="status" id="principle">Decrease the gap to see capacitance increase.</div>
+  </section>
+</div>
 </main>
 
-<footer>
-  Educational simulation · Ideal parallel-plate capacitor · Not a calibrated instrument
-</footer>
+<footer>Educational simulation · Ideal parallel-plate capacitor · Not a calibrated instrument</footer>
+
+<!-- Actual model viewer for the uploaded GLB file -->
+<div id="arModal" role="dialog" aria-modal="true" aria-label="Capacitive transducer 3D model">
+  <div class="ar-window">
+    <div class="ar-top">
+      <h2>Capacitive Variable-Distance Transducer</h2>
+      <button id="closeAR">✕ Close</button>
+    </div>
+
+    <div id="arError"></div>
+
+    <model-viewer
+      id="capacitorModel"
+      alt="Capacitive variable-distance transducer with fixed and movable parallel plates"
+      camera-controls
+      auto-rotate
+      shadow-intensity="1"
+      exposure="1"
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      ar-scale="auto"
+      loading="eager"
+      interaction-prompt="auto">
+      <button slot="ar-button" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#087f8c;color:white;border:0;padding:14px 20px;border-radius:10px">
+        View in your space
+      </button>
+    </model-viewer>
+
+    <p class="ar-help">Rotate the capacitor with your finger or mouse. On a compatible phone, select “View in your space” to launch AR.</p>
+  </div>
+</div>
 
 <script>
 (() => {
   const EPS0 = 8.854187817e-12;
   const AREA = 0.01; // 100 cm²
-  const ER = 1;      // Air, approximated as vacuum
-  const VOLTAGE = 1; // Assumed voltage for illustrative field estimate
-
+  const VOLTAGE = 1;
   const slider = document.getElementById('distance');
-  const scene = document.getElementById('scene');
+  const sceneElement = document.getElementById('scene');
 
   let distance = 5;
-  let isCross = false;
+  let crossSection = false;
   let animating = false;
-  let animationDirection = 1;
+  let direction = 1;
   let lastTime = 0;
-  let drag = false;
-  let lastX = 0;
-  let lastY = 0;
-  let rotX = -0.12;
-  let rotY = -0.45;
-  let zoom = 1;
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+  let rotX = -0.12, rotY = -0.45, zoom = 1;
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x000000, 0);
+  const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,2));
+  renderer.setClearColor(0x000000,0);
   renderer.outputEncoding = THREE.sRGBEncoding;
-  scene.appendChild(renderer.domElement);
+  sceneElement.appendChild(renderer.domElement);
 
   const world = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-  camera.position.set(0, 3.7, 11);
-
-  world.add(new THREE.AmbientLight(0xffffff, 1.15));
-  const light = new THREE.DirectionalLight(0xffffff, 2);
-  light.position.set(4, 7, 6);
+  const camera = new THREE.PerspectiveCamera(42,1,0.1,100);
+  world.add(new THREE.AmbientLight(0xffffff,1.15));
+  const light = new THREE.DirectionalLight(0xffffff,2);
+  light.position.set(4,7,6);
   world.add(light);
 
   const model = new THREE.Group();
   world.add(model);
 
-  const plateMaterial = color => new THREE.MeshStandardMaterial({
-    color, metalness: 0.68, roughness: 0.3,
-    side: THREE.DoubleSide
+  const material = color => new THREE.MeshStandardMaterial({
+    color,metalness:.65,roughness:.3,side:THREE.DoubleSide
   });
+  const blue = material(0x39bfe8);
+  const orange = material(0xffa75e);
+  const dark = material(0x9ab2ca);
 
-  const blue = plateMaterial(0x39bfe8);
-  const orange = plateMaterial(0xffa75e);
-  const dark = new THREE.MeshStandardMaterial({
-    color: 0x9ab2ca, metalness: 0.45, roughness: 0.5
-  });
-  const fieldMaterial = new THREE.LineBasicMaterial({
-    color: 0x55e5f2, transparent: true, opacity: 0.72
-  });
-
-  function box(w, h, d, mat, x, y, z, parent = model) {
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(w, h, d), mat
-    );
-    mesh.position.set(x, y, z);
+  function makeBox(w,h,d,mat,x,y,z,parent=model) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+    mesh.position.set(x,y,z);
     parent.add(mesh);
     return mesh;
   }
 
-  // Plates are horizontal, facing each other vertically.
-  const fixed = box(4, 0.16, 2.5, blue, 0, -1, 0);
-  const movableGroup = new THREE.Group();
-  model.add(movableGroup);
-  box(4, 0.16, 2.5, orange, 0, 0, 0, movableGroup);
+  makeBox(4,.16,2.5,blue,0,-1,0);
+  const movable = new THREE.Group();
+  model.add(movable);
+  makeBox(4,.16,2.5,orange,0,0,0,movable);
 
-  // Supports and a measurement scale.
-  box(0.12, 2.5, 0.12, dark, -2.35, 0.15, 0);
-  box(0.12, 2.5, 0.12, dark, 2.35, 0.15, 0);
+  makeBox(.12,2.5,.12,dark,-2.35,.15,0);
+  makeBox(.12,2.5,.12,dark,2.35,.15,0);
 
   const scaleGroup = new THREE.Group();
   model.add(scaleGroup);
-  box(0.045, 2.4, 0.045, dark, 2.75, 0.15, 0, scaleGroup);
-
-  for (let i = 0; i <= 10; i++) {
-    box(0.2, 0.035, 0.055, orange, 2.64, -1 + i * 0.2, 0, scaleGroup);
+  makeBox(.045,2.4,.045,dark,2.75,.15,0,scaleGroup);
+  for(let i=0;i<=10;i++){
+    makeBox(.2,.035,.055,orange,2.64,-1+i*.2,0,scaleGroup);
   }
 
   const fieldGroup = new THREE.Group();
   model.add(fieldGroup);
+  const fieldMaterial = new THREE.LineBasicMaterial({
+    color:0x55e5f2,transparent:true,opacity:.72
+  });
 
-  function makeLine(points, material, parent = fieldGroup) {
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const line = new THREE.Line(geometry, material);
-    parent.add(line);
-    return line;
-  }
-
-  // Electric field lines, simplified for teaching.
-  for (let x = -1.65; x <= 1.66; x += 0.55) {
-    for (let z = -0.75; z <= 0.76; z += 0.5) {
-      makeLine([
-        new THREE.Vector3(x, -0.89, z),
-        new THREE.Vector3(x, -0.65, z),
-        new THREE.Vector3(x, -0.35, z),
-        new THREE.Vector3(x, -0.1, z)
-      ], fieldMaterial);
+  for(let x=-1.65;x<=1.66;x+=.55){
+    for(let z=-.75;z<=.76;z+=.5){
+      const points=[
+        new THREE.Vector3(x,-.89,z),
+        new THREE.Vector3(x,-.65,z),
+        new THREE.Vector3(x,-.35,z),
+        new THREE.Vector3(x,-.1,z)
+      ];
+      fieldGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        fieldMaterial
+      ));
     }
   }
 
-  // A subtle floor grid.
-  const grid = new THREE.GridHelper(10, 20, 0x29425e, 0x1b2d43);
-  grid.position.y = -1.35;
+  const grid = new THREE.GridHelper(10,20,0x29425e,0x1b2d43);
+  grid.position.y=-1.35;
   world.add(grid);
 
-  function updateSize() {
-    const w = scene.clientWidth;
-    const h = scene.clientHeight;
-    if (!w || !h) return;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
+  function resize(){
+    const w=sceneElement.clientWidth,h=sceneElement.clientHeight;
+    if(!w||!h)return;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h;
     camera.updateProjectionMatrix();
   }
 
-  function capacitancePF(dmm) {
-    return EPS0 * ER * AREA / (dmm / 1000) * 1e12;
+  function capacitancePF(dmm){
+    return EPS0*AREA/(dmm/1000)*1e12;
   }
 
-  function updateGraph() {
-    const canvas = document.getElementById('graph');
-    const rect = canvas.getBoundingClientRect();
-    if (!rect.width) return;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = rect.width * ratio;
-    canvas.height = 230 * ratio;
+  function drawGraph(){
+    const canvas=document.getElementById('graph');
+    const rect=canvas.getBoundingClientRect();
+    if(!rect.width)return;
+    const ratio=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=rect.width*ratio;
+    canvas.height=230*ratio;
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    const w=rect.width,h=230,left=42,right=12,top=15,bottom=35;
+    const gw=w-left-right,gh=h-top-bottom,maxC=capacitancePF(1);
 
-    const ctx = canvas.getContext('2d');
-    ctx.scale(ratio, ratio);
-    const w = rect.width, h = 230;
-    ctx.clearRect(0, 0, w, h);
+    ctx.clearRect(0,0,w,h);
+    ctx.font='11px Arial';
+    ctx.strokeStyle='#263a53';
+    ctx.fillStyle='#9aacc4';
 
-    const left = 42, right = 12, top = 15, bottom = 35;
-    const gw = w - left - right, gh = h - top - bottom;
-    const maxC = capacitancePF(1);
-
-    ctx.font = '11px Arial';
-    ctx.strokeStyle = '#263a53';
-    ctx.fillStyle = '#9aacc4';
-    ctx.lineWidth = 1;
-
-    for (let i = 0; i <= 4; i++) {
-      const y = top + gh * i / 4;
-      ctx.beginPath();
-      ctx.moveTo(left, y);
-      ctx.lineTo(w - right, y);
-      ctx.stroke();
-      ctx.fillText((maxC * (1 - i / 4)).toFixed(0), 4, y + 4);
+    for(let i=0;i<=4;i++){
+      const y=top+gh*i/4;
+      ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();
+      ctx.fillText((maxC*(1-i/4)).toFixed(0),4,y+4);
     }
-
-    for (let d = 1; d <= 10; d++) {
-      const x = left + (d - 1) / 9 * gw;
-      ctx.fillText(String(d), x - 3, h - 15);
+    for(let d=1;d<=10;d++){
+      const x=left+(d-1)/9*gw;
+      ctx.fillText(String(d),x-3,h-15);
     }
+    ctx.fillText('Distance (mm)',left+gw/2-35,h-2);
 
-    ctx.fillText('Distance (mm)', left + gw / 2 - 35, h - 2);
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#55e5f2';
-    ctx.lineWidth = 2.5;
-    for (let d = 1; d <= 10.001; d += 0.05) {
-      const x = left + (d - 1) / 9 * gw;
-      const y = top + gh * (1 - capacitancePF(d) / maxC);
-      if (d === 1) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    ctx.beginPath();ctx.strokeStyle='#55e5f2';ctx.lineWidth=2.5;
+    for(let d=1;d<=10;d+=.05){
+      const x=left+(d-1)/9*gw;
+      const y=top+gh*(1-capacitancePF(d)/maxC);
+      if(d===1)ctx.moveTo(x,y);else ctx.lineTo(x,y);
     }
     ctx.stroke();
 
-    const px = left + (distance - 1) / 9 * gw;
-    const py = top + gh * (1 - capacitancePF(distance) / maxC);
-    ctx.beginPath();
-    ctx.arc(px, py, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffb66d';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    const px=left+(distance-1)/9*gw;
+    const py=top+gh*(1-capacitancePF(distance)/maxC);
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);
+    ctx.fillStyle='#ffb66d';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
   }
 
-  function updateUI() {
-    const c = capacitancePF(distance);
-    const base = capacitancePF(5);
-    document.getElementById('distanceValue').textContent = distance.toFixed(1) + ' mm';
-    document.getElementById('gapStat').textContent = distance.toFixed(1) + ' mm';
-    document.getElementById('capStat').textContent = c.toFixed(2) + ' pF';
-    document.getElementById('changeStat').textContent = (c / base * 100).toFixed(0) + '%';
-    document.getElementById('fieldStat').textContent =
-      (VOLTAGE / (distance / 1000)).toFixed(0) + ' V/m';
+  function updateUI(){
+    const c=capacitancePF(distance);
+    const base=capacitancePF(5);
+    document.getElementById('distanceValue').textContent=distance.toFixed(1)+' mm';
+    document.getElementById('gapStat').textContent=distance.toFixed(1)+' mm';
+    document.getElementById('capStat').textContent=c.toFixed(2)+' pF';
+    document.getElementById('changeStat').textContent=(c/base*100).toFixed(0)+'%';
+    document.getElementById('fieldStat').textContent=(VOLTAGE/(distance/1000)).toFixed(0)+' V/m';
 
-    let message;
-    if (distance < 4.9) {
-      message = 'The plates are closer together. Capacitance has increased because C is inversely proportional to distance.';
-    } else if (distance > 5.1) {
-      message = 'The plates are farther apart. Capacitance has decreased because C is inversely proportional to distance.';
-    } else {
-      message = 'At 5 mm separation, the reference capacitance is approximately 17.7 pF for the selected plate area.';
-    }
-    document.getElementById('explanation').textContent = message;
+    document.getElementById('explanation').textContent =
+      distance<4.9
+      ? 'The plates are closer. Capacitance has increased.'
+      : distance>5.1
+      ? 'The plates are farther apart. Capacitance has decreased.'
+      : 'At 5 mm, the reference capacitance is approximately 17.7 pF.';
+
     document.getElementById('principle').textContent =
-      distance < 5
-        ? 'Smaller gap → higher capacitance → a larger capacitive response.'
-        : distance > 5
-        ? 'Larger gap → lower capacitance → a smaller capacitive response.'
-        : 'Move the slider in either direction and compare the readings.';
+      distance<5
+      ? 'Smaller gap → higher capacitance.'
+      : distance>5
+      ? 'Larger gap → lower capacitance.'
+      : 'Move the slider and compare the readings.';
 
-    movableGroup.position.y = 0.16 + distance * 0.12;
-    fieldGroup.visible = !isCross;
-    scaleGroup.visible = true;
-    updateGraph();
+    movable.position.y=.16+distance*.12;
+    fieldGroup.visible=!crossSection;
+    drawGraph();
   }
 
-  function animate(time) {
+  function animate(time){
     requestAnimationFrame(animate);
-    if (animating && time - lastTime > 35) {
-      lastTime = time;
-      distance += animationDirection * 0.1;
-      if (distance >= 10) {
-        distance = 10;
-        animationDirection = -1;
-      }
-      if (distance <= 1) {
-        distance = 1;
-        animationDirection = 1;
-      }
-      slider.value = distance;
+    if(animating&&time-lastTime>35){
+      lastTime=time;
+      distance+=direction*.1;
+      if(distance>=10){distance=10;direction=-1}
+      if(distance<=1){distance=1;direction=1}
+      slider.value=distance;
       updateUI();
     }
-    model.rotation.x = rotX;
-    model.rotation.y = rotY;
-    camera.position.set(0, 3.7, 11 / zoom);
-    camera.lookAt(0, 0, 0);
-    renderer.render(world, camera);
+    model.rotation.x=rotX;
+    model.rotation.y=rotY;
+    camera.position.set(0,3.7,11/zoom);
+    camera.lookAt(0,0,0);
+    renderer.render(world,camera);
   }
 
-  slider.addEventListener('input', () => {
-    animating = false;
-    document.getElementById('animateBtn').textContent = '▶ Animate movement';
-    distance = Number(slider.value);
+  slider.addEventListener('input',()=>{
+    animating=false;
+    document.getElementById('animateBtn').textContent='▶ Animate movement';
+    distance=Number(slider.value);
     updateUI();
   });
 
-  document.getElementById('animateBtn').addEventListener('click', () => {
-    animating = !animating;
-    document.getElementById('animateBtn').textContent =
-      animating ? 'Ⅱ Pause animation' : '▶ Animate movement';
+  document.getElementById('animateBtn').addEventListener('click',()=>{
+    animating=!animating;
+    document.getElementById('animateBtn').textContent=
+      animating?'Ⅱ Pause animation':'▶ Animate movement';
   });
 
-  document.getElementById('crossBtn').addEventListener('click', e => {
-    isCross = !isCross;
-    fieldGroup.visible = !isCross;
-    fixed.material = isCross ? orange : blue;
-    e.currentTarget.textContent = isCross ? 'Show 3D view' : 'Show cross-section';
-    e.currentTarget.classList.toggle('active', isCross);
+  document.getElementById('crossBtn').addEventListener('click',e=>{
+    crossSection=!crossSection;
+    fieldGroup.visible=!crossSection;
+    e.currentTarget.textContent=crossSection?'Show 3D view':'Show cross-section';
+    e.currentTarget.classList.toggle('active',crossSection);
   });
 
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    animating = false;
-    isCross = false;
-    distance = 5;
-    slider.value = 5;
-    rotX = -0.12;
-    rotY = -0.45;
-    zoom = 1;
-    fixed.material = blue;
-    fieldGroup.visible = true;
-    document.getElementById('animateBtn').textContent = '▶ Animate movement';
-    document.getElementById('crossBtn').textContent = 'Show cross-section';
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    animating=false;
+    crossSection=false;
+    distance=5;slider.value=5;
+    rotX=-.12;rotY=-.45;zoom=1;
+    fieldGroup.visible=true;
+    document.getElementById('animateBtn').textContent='▶ Animate movement';
+    document.getElementById('crossBtn').textContent='Show cross-section';
     document.getElementById('crossBtn').classList.remove('active');
     updateUI();
   });
 
-  renderer.domElement.addEventListener('pointerdown', e => {
-    drag = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
+  renderer.domElement.addEventListener('pointerdown',e=>{
+    dragging=true;lastX=e.clientX;lastY=e.clientY;
     renderer.domElement.setPointerCapture(e.pointerId);
   });
-
-  renderer.domElement.addEventListener('pointermove', e => {
-    if (!drag) return;
-    rotY += (e.clientX - lastX) * 0.008;
-    rotX += (e.clientY - lastY) * 0.005;
-    rotX = Math.max(-0.8, Math.min(0.8, rotX));
-    lastX = e.clientX;
-    lastY = e.clientY;
+  renderer.domElement.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    rotY+=(e.clientX-lastX)*.008;
+    rotX+=(e.clientY-lastY)*.005;
+    rotX=Math.max(-.8,Math.min(.8,rotX));
+    lastX=e.clientX;lastY=e.clientY;
   });
-
-  renderer.domElement.addEventListener('pointerup', () => drag = false);
-  renderer.domElement.addEventListener('pointercancel', () => drag = false);
-  renderer.domElement.addEventListener('wheel', e => {
+  renderer.domElement.addEventListener('pointerup',()=>dragging=false);
+  renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+  renderer.domElement.addEventListener('wheel',e=>{
     e.preventDefault();
-    zoom = Math.max(0.65, Math.min(1.6, zoom - e.deltaY * 0.001));
-  }, { passive: false });
+    zoom=Math.max(.65,Math.min(1.6,zoom-e.deltaY*.001));
+  },{passive:false});
 
-  // Export a basic GLB model for compatible WebXR viewers.
-  
-document.getElementById('arBtn').addEventListener('click', () => {
-  window.open(
-    'https://modelviewer.dev/examples/augmentedreality/',
-    '_blank'
-  );
-});
+  // The GLB is loaded from the GitHub Pages URL for this repository.
+  const modelURL =
+    'https://faseehahnoorul-eng.github.io/capacitive-variable-distance/capacitive-variable-distance.glb';
 
+  const modal=document.getElementById('arModal');
+  const viewer=document.getElementById('capacitorModel');
+  const errorBox=document.getElementById('arError');
 
-  window.addEventListener('resize', () => {
-    updateSize();
-    updateGraph();
+  viewer.setAttribute('src',modelURL);
+
+  document.getElementById('arBtn').addEventListener('click',()=>{
+    modal.classList.add('open');
+    errorBox.style.display='none';
   });
 
-  updateSize();
+  document.getElementById('closeAR').addEventListener('click',()=>{
+    modal.classList.remove('open');
+  });
+
+  modal.addEventListener('click',e=>{
+    if(e.target===modal)modal.classList.remove('open');
+  });
+
+  viewer.addEventListener('error',()=>{
+    errorBox.textContent=
+      'The capacitor model could not be loaded. Check that capacitive-variable-distance.glb is uploaded to the repository root and that its GitHub Pages URL is accessible.';
+    errorBox.style.display='block';
+  });
+
+  viewer.addEventListener('load',()=>{
+    errorBox.style.display='none';
+  });
+
+  window.addEventListener('resize',resize);
+  resize();
   updateUI();
   requestAnimationFrame(animate);
 })();
