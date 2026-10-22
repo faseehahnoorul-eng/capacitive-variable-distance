@@ -592,10 +592,14 @@ footer { text-align: center; color: var(--muted); padding: 30px 12px; }
   }, { passive: false });
 
   // Export a basic GLB model for compatible WebXR viewers.
-  document.getElementById('arBtn').addEventListener('click', () => {
-    const message = 'The 3D capacitor is ready to explore here. For true phone AR, export a GLB model and open it in a compatible AR viewer. This demo does not start an AR session automatically.';
-    alert(message);
-  });
+  
+document.getElementById('arBtn').addEventListener('click', () => {
+  window.open(
+    'https://modelviewer.dev/examples/augmentedreality/',
+    '_blank'
+  );
+});
+
 
   window.addEventListener('resize', () => {
     updateSize();
